@@ -5,15 +5,12 @@ import cv2
 model = YOLO('weights/best_fp16.engine', task='segment')
 
 # Run inference on 'bus.jpg' with arguments
-#results = model.predict('datasets/test.mp4', save=False, imgsz=640, conf=0.4, show=False, stream=True, show_boxes=False)
+#model.predict('datasets/test.mp4', save=False, conf=0.4, show=True, stream=False)
+
 cap = cv2.VideoCapture('datasets/test.mp4')
 
 # Loop through the video frames
 while cap.isOpened():
-    # Read a frame from the video
     success, frame = cap.read()
-
     if success:
-        results = model(frame)
-        annotated_frame = results[0].plot()
-        cv2.imshow("YOLOv8 Inference", annotated_frame)
+        model(frame, show=True,conf=0.5)

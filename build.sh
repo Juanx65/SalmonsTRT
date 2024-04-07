@@ -20,3 +20,5 @@ python build_trt.py --weights weights/best.onnx  --fp32 --input_shape $BATCH_SIZ
 #TRT INT8
 #rm -r outputs/cache
 #python build_trt.py --weights="weights/best_int8.onnx"  --int8 --input_shape $BATCH_SIZE $C $H $W --engine_name best_int8.engine
+
+#yolo val segment data=datasets/salmons/salmons.yaml model=weights/best_fp32.engine
