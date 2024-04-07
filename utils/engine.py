@@ -109,7 +109,7 @@ class EngineBuilder:
                 config.set_flag(trt.BuilderFlag.FP16)
             if int8 and self.builder.platform_has_fast_int8:
                 ## Carga de los datos
-                calibration_file = get_calibration_files(calibration_data="datasets/img_preprocess/")#"datasets/img_preprocess/")# "datasets/img_crop_test/" # para juanjo usar img_crop_test
+                calibration_file = get_calibration_files(calibration_data="datasets/salmons/images/val/")#"datasets/img_preprocess/")# "datasets/img_crop_test/" # para juanjo usar img_crop_test
                 Int8_calibrator = ImagenetCalibrator(calibration_files=calibration_file,
                                                      batch_size=input_shape[0],
                                                      input_shape=(input_shape[1],input_shape[2],input_shape[3]), #(input_shape[1],input_shape[2],input_shape[3]),# (1,1,input_shape[1])# para juanjo usar 1,1,nx como input shape

@@ -1,5 +1,5 @@
 #path to dataset and training/val images
-path: ../Salmons/datasets/salmons
+path: ../datasets/salmons
 train: images/train
 val: images/val
 
