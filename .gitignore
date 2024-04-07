@@ -1,0 +1,11 @@
+env/
+outputs/
+__pycache__/
+datasets/**/*.png
+datasets/**/*.jpg
+datasets/**/*.jpeg
+datasets/**/*.txt
+datasets/**/*.cache
+*.engine
+*.onnx
+*.pt

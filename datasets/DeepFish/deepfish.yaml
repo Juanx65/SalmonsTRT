@@ -1,0 +1,8 @@
+#path to dataset and training/val images
+path: ../datasets/deepfish
+train: images/train
+val: images/val
+
+#classes
+names: 
+  0: salmon
