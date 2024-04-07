@@ -117,7 +117,8 @@ class EngineBuilder:
    
                 config.set_flag(trt.BuilderFlag.INT8)
                 config.int8_calibrator = Int8_calibrator
-    
+
+        torch.cuda.empty_cache()
         self.weight = self.checkpoint.with_name(engine_name)
 
         with self.builder.build_engine(self.network, config) as engine, open(self.weight, "wb") as t:
@@ -130,8 +131,6 @@ class EngineBuilder:
         self.logger.log(
             trt.Logger.WARNING, f'Build tensorrt engine finish.\n'
             f'Save in {str(self.weight.absolute())}')
-        
-        torch.cuda.empty_cache()
 
     def build(self,
               fp32: bool = True,
