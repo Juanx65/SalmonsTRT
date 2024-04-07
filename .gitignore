@@ -9,3 +9,6 @@ datasets/**/*.cache
 *.engine
 *.onnx
 *.pt
+*.mp4
+*.whl
+runs/
