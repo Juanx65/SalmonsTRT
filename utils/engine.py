@@ -336,7 +336,8 @@ def get_calibration_files(calibration_data, max_calibration_size=None, allowed_e
 
     return calibration_files
 
-class ImagenetCalibrator(trt.IInt8EntropyCalibrator2):
+#IInt8MinMaxCalibrator para salmones int8, en la calibarion hay divicion por cero de otro modo
+class ImagenetCalibrator(trt.IInt8MinMaxCalibrator):#IInt8MinMaxCalibrator#IInt8EntropyCalibrator2
     """
         https://docs.nvidia.com/deeplearning/sdk/tensorrt-api/python_api/infer/Int8/EntropyCalibrator2.html
 

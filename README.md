@@ -81,9 +81,14 @@ pip3 install pillow==8.4.0
 
 `pip install numpy --upgrade`
 
+`pip install --upgrade scipy`
+
 ---
 
 OBS:
 
 - cambiar el config de ultralitics porque se webea el path al dataset!
 
+- puedes usar `python onnx_layer_removal.py` para ver el grafo del onnx!!!
+
+- si no se puede generar int8 intentar remover capas con onnx_layer_removal.py!!

@@ -22,3 +22,5 @@ python build_trt.py --weights weights/best.onnx  --fp32 --input_shape $BATCH_SIZ
 #python build_trt.py --weights="weights/best_int8.onnx"  --int8 --input_shape $BATCH_SIZE $C $H $W --engine_name best_int8.engine
 
 #yolo val segment data=datasets/salmons/salmons.yaml model=weights/best_fp32.engine
+
+##obs puedes usar python onnx_layer_removal.py para ver el grafo del onnx
