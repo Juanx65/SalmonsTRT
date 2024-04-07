@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import cv2
 
 # Load a pretrained YOLOv8n model
-model = YOLO('weights/best_fp16.engine', task='segment')
+model = YOLO('weights/best_int8.engine', task='segment')
 
 # Run inference on 'bus.jpg' with arguments
 #model.predict('datasets/test.mp4', save=False, conf=0.4, show=True, stream=False)
