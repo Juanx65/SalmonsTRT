@@ -89,6 +89,6 @@ OBS:
 
 - cambiar el config de ultralitics porque se webea el path al dataset!
 
-- puedes usar `python onnx_layer_removal.py` para ver el grafo del onnx!!!
+- puedes usar `netron` para ver el grafo del onnx!!!
 
 - si no se puede generar int8 intentar remover capas con onnx_layer_removal.py!!
