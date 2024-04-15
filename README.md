@@ -83,6 +83,13 @@ pip3 install pillow==8.4.0
 
 `pip install --upgrade scipy`
 
+* otros pip install:
+
+```
+polygraphy
+onnx_opcounter
+```
+
 ---
 
 OBS:
