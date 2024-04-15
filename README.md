@@ -88,6 +88,7 @@ pip3 install pillow==8.4.0
 ```
 polygraphy
 onnx_opcounter
+torchinfo
 ```
 
 ---

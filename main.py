@@ -14,7 +14,8 @@ from utils.helper import AverageMeter, accuracy
 
 from torch.profiler import profile, ProfilerActivity,schedule, tensorboard_trace_handler, _KinetoProfile
 #from hta.trace_analysis import TraceAnalysis
-#from torchsummary import summary
+
+#from torchinfo import summary
 
 import subprocess
 import re
@@ -64,6 +65,7 @@ def evaluate(opt, model):
     nun_batches = 100
     torch.manual_seed(42)
     inputs= torch.rand(nun_batches,opt.batch_size, 3, 640, 640) # generamos un input random [0,1)
+    #summary(model,input_size=(opt.batch_size, 3,640,640)) # no funciona con engine.
 
     batch_time_all = AverageMeter()
 
@@ -100,10 +102,12 @@ def evaluate(opt, model):
             else:
                 output = model(input)
             
-            #if isinstance(output, tuple):
-            #    output_cpu = tuple(o.cpu() if torch.is_tensor(o) else o for o in output)
-            #else:
-            #    output_cpu = output.cpu()
+            if isinstance(output, tuple):
+                output_cpu = tuple(o.cpu() if torch.is_tensor(o) else o for o in output)
+            elif isinstance(output, list):
+                output_cpu = list(o.cpu() if torch.is_tensor(o) else o for o in output)
+            else:
+                output_cpu = output.cpu()
             #output_cpu = output.cpu() # con proposito de calcular el tiempo que tarda en volver a pasar la data a la cpu
             all_time = (time.time() - start_all) * 1000  # Convert to milliseconds / time when the result pass to cpu again 
 
