@@ -1,3 +1,22 @@
+# RUN YOLO SEGMENT EVAL
+
+`yolo val segment data=datasets/salmons/salmons.yaml model=weights/best.pt`
+
+puedes usar en `model` los .pt o .engine
+
+data es un archivo .yaml el cual contiene info sobre el dataset de evaluación:
+
+```
+#path to dataset and training/val images
+path: ../datasets/salmons
+train: images/train
+val: images/val
+
+#classes
+names: 
+  0: salmon
+```
+
 # INSTALLATION
 
 ## setup jetson nano 

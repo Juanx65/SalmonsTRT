@@ -7,7 +7,7 @@ W=640
 H=640
 
 # Ajusta el umbral de memoria (en kilobytes)
-MEM_THRESHOLD=204800 # 200Mb
+MEM_THRESHOLD=102400 # 100Mb
 # Función para ejecutar y monitorear un programa de Python
 execute_and_monitor() {
     local script=$1
@@ -93,14 +93,14 @@ if [ "$BUILD" = "build" ]; then
         execute_build "onnx_transform.py --weights weights/best.pth --input_shape 1 $C $H $W"
         execute_build "build_trt.py --weights weights/best.onnx  --fp32 --input_shape 1 $C $H $W --engine_name best_fp32.engine"
         execute_build "build_trt.py --weights weights/best.onnx  --fp16 --input_shape 1 $C $H $W --engine_name best_fp16.engine"
-        #rm -r outputs/cache > /dev/null 2>&1
-        #execute_build "build_trt.py --weights weights/best.onnx  --int8 --input_shape 1 $C $H $W --engine_name best_int8.engine"
+        rm -r outputs/cache > /dev/null 2>&1
+        execute_build "build_trt.py --weights weights/best.onnx  --int8 --input_shape 1 $C $H $W --engine_name best_int8.engine"
     else
         execute_build "onnx_transform.py --weights weights/best.pth --network $NETWORK --input_shape -1 $C $H $W"
         execute_build "build_trt.py --weights weights/best.onnx  --fp32 --input_shape -1 $C $H $W --engine_name best_fp32.engine"
         execute_build "build_trt.py --weights weights/best.onnx  --fp16 --input_shape -1 $C $H $W --engine_name best_fp16.engine"
-        #rm -r outputs/cache > /dev/null 2>&1
-        #execute_build "build_trt.py --weights weights/best.onnx  --int8 --input_shape -1 $C $H $W --engine_name best_int8.engine"
+        rm -r outputs/cache > /dev/null 2>&1
+        execute_build "build_trt.py --weights weights/best.onnx  --int8 --input_shape -1 $C $H $W --engine_name best_int8.engine"
     fi
 fi
 
@@ -109,7 +109,7 @@ fi
 VANILLA="main.py --batch_size $BATCH_SIZE --less --weights weights/best.pt --engine weights/best.engine --model_version Vanilla"
 FP32="main.py  --batch_size $BATCH_SIZE -trt --engine weights/best_fp32.engine --less --non_verbose --model_version TRT_fp32"
 FP16="main.py  --batch_size $BATCH_SIZE -trt --engine weights/best_fp16.engine --less --non_verbose --model_version TRT_fp16"
-#INT8="main.py  --batch_size $BATCH_SIZE -trt --engine weights/best_int8.engine --less --non_verbose --model_version TRT_int8"
+INT8="main.py  --batch_size $BATCH_SIZE -trt --engine weights/best_int8.engine --less --non_verbose --model_version TRT_int8"
 
 rm -r outputs/log > /dev/null 2>&1
 rm post_processing/*.txt > /dev/null 2>&1
@@ -117,7 +117,7 @@ rm post_processing/*.txt > /dev/null 2>&1
 execute_and_monitor "$VANILLA" "nonjetson" "post_processing/vanilla.txt"
 execute_and_monitor "$FP32" "nonjetson" "post_processing/trt_fp32.txt"
 execute_and_monitor "$FP16" "nonjetson" "post_processing/trt_fp16.txt"
-#execute_and_monitor "$INT8" "nonjetson" "post_processing/trt_int8.txt"
+execute_and_monitor "$INT8" "nonjetson" "post_processing/trt_int8.txt"
 
 ## Elimina los pesos generados para la siguinete operacion
 #rm weights/*.engine
