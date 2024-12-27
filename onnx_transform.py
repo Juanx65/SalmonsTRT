@@ -33,7 +33,7 @@ def main(opt):
     if opt.input_shape[0] == -1:
         fake_input = torch.zeros(16,opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
     else:
-        fake_input = torch.zeros(1,opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
+        fake_input = torch.zeros(opt.input_shape[0],opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
     
     y = None
     for _ in range(2):
