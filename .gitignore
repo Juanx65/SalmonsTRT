@@ -12,3 +12,4 @@ datasets/**/*.cache
 *.mp4
 *.whl
 runs/
+weights/*
