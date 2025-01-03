@@ -1,10 +1,7 @@
 import torch
 import onnx
 import os
-from io import BytesIO
 from ultralytics.nn.autobackend import AutoBackend
-from ultralytics import YOLO
-from copy import deepcopy
 
 import argparse
 
@@ -31,7 +28,7 @@ def main(opt):
 
     save_path = weights_path.replace('.pt', '.onnx')
     if opt.input_shape[0] == -1:
-        fake_input = torch.zeros(16,opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
+        fake_input = torch.zeros(128,opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
     else:
         fake_input = torch.zeros(opt.input_shape[0],opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
     
@@ -75,8 +72,6 @@ def get_latest_opset():
 def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', default = 'weights/best.pth', type=str, help='path to the pth weight file')
-    parser.add_argument('-p','--pretrained', action='store_true',help='transform a pretrained model from torch.hub.load')
-    parser.add_argument('-n','--network', default='resnet18',help='name of the pretrained model to use')
     parser.add_argument('--input_shape',
                         nargs='+',
                         type=int,

@@ -4,7 +4,6 @@
 / -----------------------------------------------------------------------------------------------------------------------------------------/
 """
 import os
-import pickle
 from collections import defaultdict, namedtuple
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
@@ -46,10 +45,10 @@ logger = logging.getLogger(__name__)
 / -----------------------------------------------------------------------------------------------------------------------------------------/
 """
 BATCH_SIZE = 1
-MAX_BATCH_SIZE = 256
+MAX_BATCH_SIZE = 128
 CHANNEL = 3
-HEIGHT = 224
-WIDTH = 224
+HEIGHT = 640
+WIDTH = 640
 
 CACHE_FOLDER = "outputs/cache/"
 
@@ -83,77 +82,99 @@ class EngineBuilder:
         self.device = device
 
     def __build_engine(self,
-                       fp32: bool = True,
-                       fp16: bool = False,
-                       int8: bool = False,
-                       input_shape: Union[List, Tuple] = (BATCH_SIZE,CHANNEL,HEIGHT, WIDTH),#NCHW
-                       build_op_lvl: int = 3,
-                       avg_timing_iterations: int = 1,
-                       engine_name: str = 'best.engine',
-                       with_profiling: bool = True) -> None:
+                   fp32: bool = True,
+                   fp16: bool = False,
+                   int8: bool = False,
+                   input_shape: Union[List, Tuple] = (BATCH_SIZE, CHANNEL, HEIGHT, WIDTH),  # NCHW
+                   dynamic_hw: bool = False,  # Nuevo parámetro para habilitar dinámica en altura y ancho
+                   min_hw: Tuple[int, int] = (64, 64),  # Tamaño mínimo para altura y ancho
+                   max_hw: Tuple[int, int] = (640, 640),  # Tamaño máximo para altura y ancho
+                   build_op_lvl: int = 3,
+                   avg_timing_iterations: int = 1,
+                   engine_name: str = 'best.engine',
+                   with_profiling: bool = True) -> None:
         """
         __build_engine constructs the TensorRT engine from the ONNX model.
 
-        :param self: Reference to the current instance of the class.
         :param fp32: Whether to build the engine with FP32 precision.
         :param fp16: Whether to build the engine with FP16 precision.
         :param int8: Whether to build the engine with INT8 precision.
-        :param input_shape: The shape of the input tensor, in the 
-            (Number of image in the batch (batch size), Number of channels, Height of the image, Width of the image)    
-            or NCHW format.
+        :param input_shape: The shape of the input tensor in NCHW format.
+        :param dynamic_hw: Whether to enable dynamic height and width.
+        :param min_hw: Minimum height and width for dynamic input.
+        :param max_hw: Maximum height and width for dynamic input.
+        :param build_op_lvl: Optimization level for the builder.
+        :param avg_timing_iterations: Number of iterations for timing layers.
         :param engine_name: The name of the output engine file.
         :param with_profiling: Whether to include detailed profiling information.
         :return: None
         """
 
-        # loggers
         logger = trt.Logger(trt.Logger.WARNING)
         trt.init_libnvinfer_plugins(logger, namespace='')
         builder = trt.Builder(logger)
-        
-        # creates the builder configuration
         config = builder.create_builder_config()
-        
         profile = builder.create_optimization_profile()
 
-        if(input_shape[0] == -1): # Only if an engine for dynamic batch size will be made
-            #  to work with dynamic batch size
+        # Configurar perfil de optimización dinámico
+        min_batch = input_shape[0]
+        op_batch = input_shape[0]
+        max_batch = input_shape[0]
 
-            # Dimensions for a dynamic input, with minimum, optimal, and maximum dimensions
-            # for dynamic input "images" defined in the onnx_transform script
-            min_in_dims = trt.Dims4(1,input_shape[1],input_shape[2],input_shape[3])
-            op_in_dims = trt.Dims4(int(MAX_BATCH_SIZE/2),input_shape[1],input_shape[2],input_shape[3])
-            max_in_dims = trt.Dims4(MAX_BATCH_SIZE,input_shape[1],input_shape[2],input_shape[3])
+        min_channel = input_shape[1]
+        op_channel = input_shape[1]
+        max_channel = input_shape[1]
 
+        min_height =  input_shape[2]
+        op_height =  input_shape[2]
+        max_height =  input_shape[2]
+
+        min_width = input_shape[3]
+        op_width = input_shape[3]
+        max_width = input_shape[3]
+
+        if dynamic_hw:
+            min_height =   min_hw[0]
+            op_height =   int((min_hw[0] + max_hw[0]) // 2)
+            max_height =  max_hw[0]
+
+            min_width = min_hw[1]
+            op_width = int((min_hw[1] + max_hw[1]) // 2)
+            max_width = max_hw[1]
+
+        if input_shape[0] == -1:  # Dynamic batch size
+            min_batch = 1
+            op_batch = int(MAX_BATCH_SIZE // 2)
+            max_batch = MAX_BATCH_SIZE
+
+        if input_shape[0] == -1 or dynamic_hw:
+            min_in_dims = trt.Dims4(min_batch, min_channel, min_height, min_width)
+            op_in_dims = trt.Dims4(op_batch, op_channel, op_height, op_width)
+            max_in_dims = trt.Dims4(max_batch, max_channel, max_height, max_width)
+            
             profile.set_shape("images", min_in_dims, op_in_dims, max_in_dims)
+
+            print(dynamic_hw)
+
+            print(min_batch, min_channel,min_height,min_width)
+            print(op_batch, op_channel,op_height,op_width)
+            print(max_batch, max_channel,max_height,max_width)
 
             # Only if an engine for dynamic batch size with int8 cuantization will be made
             if int8 and builder.platform_has_fast_int8:
                 config.set_calibration_profile(profile)  
-             
-            # builder configuration: Add the dyncamic batch size config just made       
-        
+
         config.add_optimization_profile(profile)
-
-        # builder configuration: max_workspace_size limits the amount of memory that any layer in the model can use, set to total device memory
         config.max_workspace_size = torch.cuda.get_device_properties(self.device).total_memory
-        
-        # builder configuration: builder_optimization_level he builder optimization level which TensorRT should build the engine at. Setting a higher optimization level allows TensorRT to spend longer engine building time searching for more optimization options. The resulting engine may have better performance compared to an engine built with a lower optimization level. The default optimization level is 3. Valid values include integers from 0 to the maximum optimization level, which is currently 5. Setting it to be greater than the maximum level results in identical behavior to the maximum level.
         config.builder_optimization_level = build_op_lvl
-        
-        # builder configuration: avg_timing_iterations  The number of averaging iterations used when timing layers. When timing layers, the builder minimizes over a set of average times for layer execution. This parameter controls the number of iterations used in averaging. By default the number of averaging iterations is 1.
         config.avg_timing_iterations = avg_timing_iterations
-
-        # Indicates to the network definition that it will use explicit batch
         flag = (1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
-
         network = builder.create_network(flag)
 
         self.logger = logger
         self.builder = builder
         self.network = network
 
-        # parses the network definition from the onnx model
         self.build_from_onnx()
 
         # network configuration
@@ -185,15 +206,19 @@ class EngineBuilder:
             trt.Logger.WARNING, f'Build tensorrt engine finish.\n'
             f'Save in {str(self.weight.absolute())}')
 
+
     def build(self,
-              fp32: bool = True,
-              fp16: bool = False,
-              int8: bool = False,
-              input_shape: Union[List, Tuple] = (1, 3, 128, 32),
-              build_op_lvl =  3,
-              avg_timing_iterations = 1,
-              engine_name: str = 'best.engine',
-              with_profiling=True) -> None:
+            fp32: bool = True,
+            fp16: bool = False,
+            int8: bool = False,
+            input_shape: Union[List, Tuple] = (1, 3, 640, 640),
+            dynamic_hw: bool = False,  # Nuevo parámetro para habilitar dinámica en altura y ancho
+            min_hw: Tuple[int, int] = (64, 64),  # Tamaño mínimo para altura y ancho
+            max_hw: Tuple[int, int] = (640, 640),  # Tamaño máximo para altura y ancho
+            build_op_lvl =  3,
+            avg_timing_iterations = 1,
+            engine_name: str = 'best.engine',
+            with_profiling=True) -> None:
         """
         build initiates the engine building process.
 
@@ -206,7 +231,7 @@ class EngineBuilder:
         :param with_profiling: Whether to include detailed profiling information.
         :return: None
         """
-        self.__build_engine(fp32, fp16, int8, input_shape,build_op_lvl,avg_timing_iterations, engine_name, with_profiling)
+        self.__build_engine(fp32, fp16, int8, input_shape,dynamic_hw,min_hw,max_hw,build_op_lvl,avg_timing_iterations, engine_name, with_profiling)
 
     def build_from_onnx(self):
         """
