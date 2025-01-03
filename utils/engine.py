@@ -45,10 +45,10 @@ logger = logging.getLogger(__name__)
 / -----------------------------------------------------------------------------------------------------------------------------------------/
 """
 BATCH_SIZE = 1
-MAX_BATCH_SIZE = 128
+MAX_BATCH_SIZE = 16
 CHANNEL = 3
-HEIGHT = 640
-WIDTH = 640
+HEIGHT = 320
+WIDTH = 320
 
 CACHE_FOLDER = "outputs/cache/"
 
@@ -87,8 +87,9 @@ class EngineBuilder:
                    int8: bool = False,
                    input_shape: Union[List, Tuple] = (BATCH_SIZE, CHANNEL, HEIGHT, WIDTH),  # NCHW
                    dynamic_hw: bool = False,  # Nuevo parámetro para habilitar dinámica en altura y ancho
-                   min_hw: Tuple[int, int] = (64, 64),  # Tamaño mínimo para altura y ancho
-                   max_hw: Tuple[int, int] = (640, 640),  # Tamaño máximo para altura y ancho
+                   min_hw: Tuple[int, int] = (0, 0),  # Tamaño mínimo para altura y ancho
+                   max_hw: Tuple[int, int] = (640, 640),  # Tamaño máximo para altura y ancho}
+                   max_batch_size: int = MAX_BATCH_SIZE,
                    build_op_lvl: int = 3,
                    avg_timing_iterations: int = 1,
                    engine_name: str = 'best.engine',
@@ -144,8 +145,8 @@ class EngineBuilder:
 
         if input_shape[0] == -1:  # Dynamic batch size
             min_batch = 1
-            op_batch = int(MAX_BATCH_SIZE // 2)
-            max_batch = MAX_BATCH_SIZE
+            op_batch = int(max_batch_size // 2)
+            max_batch = max_batch_size
 
         if input_shape[0] == -1 or dynamic_hw:
             min_in_dims = trt.Dims4(min_batch, min_channel, min_height, min_width)
@@ -187,7 +188,8 @@ class EngineBuilder:
                 calibration_file = get_calibration_files(calibration_data="datasets/img_preprocess/")#"datasets/img_preprocess/")# "datasets/img_crop_test/" # para juanjo usar img_crop_test
                 Int8_calibrator = ImagenetCalibrator(calibration_files=calibration_file,
                                                      batch_size=input_shape[0],
-                                                     input_shape=(input_shape[1],input_shape[2],input_shape[3]), #(input_shape[1],input_shape[2],input_shape[3]),# (1,1,input_shape[1])# para juanjo usar 1,1,nx como input shape
+                                                     max_batch_size=max_batch_size,
+                                                     input_shape=(input_shape[1],max_hw[0],max_hw[1]), #(input_shape[1],input_shape[2],input_shape[3]),# (1,1,input_shape[1])# para juanjo usar 1,1,nx como input shape
                                                      preprocess_func=preprocessing)
                 # builder configuration: Here we indicate that we will be working with INT8 calibration
                 config.set_flag(trt.BuilderFlag.INT8)
@@ -213,9 +215,10 @@ class EngineBuilder:
             int8: bool = False,
             input_shape: Union[List, Tuple] = (1, 3, 640, 640),
             dynamic_hw: bool = False,  # Nuevo parámetro para habilitar dinámica en altura y ancho
-            min_hw: Tuple[int, int] = (64, 64),  # Tamaño mínimo para altura y ancho
+            min_hw: Tuple[int, int] = (0, 0),  # Tamaño mínimo para altura y ancho
             max_hw: Tuple[int, int] = (640, 640),  # Tamaño máximo para altura y ancho
-            build_op_lvl =  3,
+            max_batch_size: int = MAX_BATCH_SIZE,
+            build_op_lvl:int =  3,
             avg_timing_iterations = 1,
             engine_name: str = 'best.engine',
             with_profiling=True) -> None:
@@ -231,7 +234,7 @@ class EngineBuilder:
         :param with_profiling: Whether to include detailed profiling information.
         :return: None
         """
-        self.__build_engine(fp32, fp16, int8, input_shape,dynamic_hw,min_hw,max_hw,build_op_lvl,avg_timing_iterations, engine_name, with_profiling)
+        self.__build_engine(fp32, fp16, int8, input_shape,dynamic_hw,min_hw,max_hw,max_batch_size,build_op_lvl,avg_timing_iterations, engine_name, with_profiling)
 
     def build_from_onnx(self):
         """
@@ -424,13 +427,13 @@ def get_calibration_files(calibration_data, max_calibration_size=None, allowed_e
     return calibration_files
 
 class ImagenetCalibrator(trt.IInt8EntropyCalibrator2):
-    def __init__(self, calibration_files=[], batch_size=BATCH_SIZE, 
+    def __init__(self, calibration_files=[], batch_size=BATCH_SIZE,  max_batch_size=MAX_BATCH_SIZE,
                  input_shape=(CHANNEL, HEIGHT, WIDTH),
                  cache_file=CACHE_FOLDER+"calibration.cache", preprocess_func=None):
         super().__init__()
         self.input_shape = input_shape
         self.cache_file = cache_file
-        self.batch_size = MAX_BATCH_SIZE if batch_size == -1 else batch_size
+        self.batch_size = max_batch_size if batch_size == -1 else batch_size
 
         self.batch = np.zeros((self.batch_size, *self.input_shape), dtype=np.float32)
         self.device_input = torch.zeros(self.batch_size, *self.input_shape, dtype=torch.float32, device='cuda')

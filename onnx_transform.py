@@ -28,7 +28,7 @@ def main(opt):
 
     save_path = weights_path.replace('.pt', '.onnx')
     if opt.input_shape[0] == -1:
-        fake_input = torch.zeros(128,opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
+        fake_input = torch.zeros(16,opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
     else:
         fake_input = torch.zeros(opt.input_shape[0],opt.input_shape[1], opt.input_shape[2],opt.input_shape[3]).to(device)
     
@@ -75,7 +75,7 @@ def parse_opt():
     parser.add_argument('--input_shape',
                         nargs='+',
                         type=int,
-                        default=[-1,3, 640,640],
+                        default=[-1,3, 320,320],
                         help='Model input shape, el primer valor es el batch_size, -1 (dinamico))]')
     
     opt = parser.parse_args()

@@ -14,6 +14,18 @@ def parse_args():
                         type=int,
                         default=[BATCH_SIZE,3, 640,640],
                         help='Model input shape, el primer valor es el batch_size, 128)]')
+    parser.add_argument('--min_hw',
+                        type= int,
+                        default=0,
+                        help='Minimum height and width value, let on cero')
+    parser.add_argument('--max_hw',
+                        type= int,
+                        default=1280,
+                        help='Max height and width value, let on the doble of the optimus value you wanna get')
+    parser.add_argument('--max_batch_size',
+                        type= int,
+                        default=16,
+                        help='max batch size when dynamic batch size')
     parser.add_argument('--dynamic_hw',
                         action='store_true',
                         help='dynamic hw')
@@ -52,7 +64,7 @@ def parse_args():
 def main(args):
     builder = EngineBuilder(args.weights, args.device)
     builder.seg = args.seg
-    builder.build(fp32=args.fp32, fp16=args.fp16, int8=args.int8, input_shape=args.input_shape,dynamic_hw=args.dynamic_hw,build_op_lvl=args.build_op_lvl,avg_timing_iterations= args.avg_timing_iterations, engine_name=args.engine_name)
+    builder.build(fp32=args.fp32, fp16=args.fp16, int8=args.int8, input_shape=args.input_shape,dynamic_hw=args.dynamic_hw,min_hw=(args.min_hw,args.min_hw),max_hw=(args.max_hw,args.max_hw),max_batch_size=args.max_batch_size,build_op_lvl=args.build_op_lvl,avg_timing_iterations= args.avg_timing_iterations, engine_name=args.engine_name)
 
 if __name__ == '__main__':
     args = parse_args()
