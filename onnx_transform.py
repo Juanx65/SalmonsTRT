@@ -75,7 +75,7 @@ def parse_opt():
     parser.add_argument('--input_shape',
                         nargs='+',
                         type=int,
-                        default=[-1,3, 320,320],
+                        default=[-1,3, 640,640],
                         help='Model input shape, el primer valor es el batch_size, -1 (dinamico))]')
     
     opt = parser.parse_args()
