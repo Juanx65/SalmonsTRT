@@ -1,7 +1,8 @@
-#path to dataset and training/val images
-path: ../datasets/salmons
+path: datasets/salmons
 train: images/train
 val: images/val
+train_labels: labels/train
+val_labels: labels/val
 
 #classes
 names: 
