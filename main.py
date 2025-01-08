@@ -145,9 +145,12 @@ def evaluate(opt, model):
     #n = len(val_loader) - warmup_batches
     #print("n: ", n)
     #print("pasa marginal: ", pasa_marginal) # asegurarse de que sea menor del 5% para que el calculo sea correcto
-
-    total_parametros = get_parametros(opt)
-    total_capas = get_layers(opt)
+    if opt.trt:
+        total_parametros = get_parametros(opt)
+        total_capas = get_layers(opt)
+    else:
+        total_capas, total_parametros = get_parameters_vanilla(opt,model)
+        
     if not opt.non_verbose:
         print("|  Model          | inf/s +-95% | Latency (ms) +-95%|size (MB)  | mAP@1 |mAP@5 | #layers | #parameters|")
         print("|-----------------|-------------|-------------------|-----------|-------|------|---------|------------|")
