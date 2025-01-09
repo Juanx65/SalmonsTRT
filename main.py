@@ -79,7 +79,7 @@ def evaluate(opt,val_loader, model):
 
         with torch.no_grad():
             #output = model(input)
-            output = model.predict(input, save=False, imgsz=640, conf=0.25)[0]
+            output = model.predict(input, save=False, imgsz=640, conf=0.25, verbose=False)[0]
             
             if isinstance(output, tuple):
                 output_cpu = tuple(o.cpu() if torch.is_tensor(o) else o for o in output)
