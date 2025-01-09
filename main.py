@@ -54,18 +54,17 @@ def main(opt):
 
 def evaluate(opt,val_loader, model):
 
-    nun_batches = 100
     batch_time_all = AverageMeter()
     size_MB = get_model_size_MB(opt)
 
     # Calculate 10% of total batches
-    warmup_batches = int(0.1 * nun_batches)
+    warmup_batches = int(0.1 * len(val_loader))
     
     # Initialize the maximum and minimum processing time after warm-up
     max_time_all = 0
     min_time_all = float('inf')
 
-    num_batches_to_process = int(1 * nun_batches)
+    num_batches_to_process = int(1 * len(val_loader))
 
     for i, (input, target) in enumerate(val_loader):
         if i >= num_batches_to_process:

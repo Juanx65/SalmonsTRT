@@ -21,9 +21,8 @@ class CustomDataset(torch.utils.data.Dataset):
         self.transform = transform
         
         # Obtener nombres de archivos de imágenes y targets
-        self.images = [os.path.join(root_dir, file) for file in os.listdir(root_dir) if file.endswith(('.jpg', '.png'))]
-        self.labels = [os.path.join(labels_dir, os.path.splitext(os.path.basename(file))[0] + '.txt') for file in os.listdir(root_dir) if file.endswith(('.jpg', '.png'))]
-        
+        self.images = [os.path.join(root_dir, file) for file in os.listdir(root_dir) if file.endswith(('.jpg', '.png','.jpeg'))]
+        self.labels = [os.path.join(labels_dir, os.path.splitext(os.path.basename(file))[0] + '.txt') for file in os.listdir(root_dir) if file.endswith(('.jpg', '.png','.jpeg'))]
         # Verificar que haya correspondencia entre imágenes y targets
         assert len(self.images) == len(self.labels), "El número de imágenes y archivos .txt no coincide."
     
@@ -51,6 +50,7 @@ class CustomDataset(torch.utils.data.Dataset):
             # Si no existe el archivo, asumir máscara vacía
             target = torch.tensor([], dtype=torch.float32)  # Sin segmentación
         
+        #print(f"Image: {img_path}, Target: {target}")
         return image, target
 
 
@@ -77,10 +77,12 @@ def create_custom_loaders(config_path, batch_size=256, workers=1, pin_memory=Tru
     transform = transforms.Compose(transformations)
     
     # Crear datasets personalizados
-    train_dataset = CustomDataset(train_path, train_labels_path, transform)  # Pasa train_labels_path
+    #train_dataset = CustomDataset(train_path, train_labels_path, transform)  # Pasa train_labels_path
     val_dataset = CustomDataset(val_path, val_labels_path, transform)        # Pasa val_labels_path
     
     # DataLoaders
+    train_loader = []
+    """ 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batch_size,
@@ -88,12 +90,30 @@ def create_custom_loaders(config_path, batch_size=256, workers=1, pin_memory=Tru
         num_workers=workers,
         pin_memory=pin_memory
     )
+    """
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=workers,
-        pin_memory=pin_memory
+        pin_memory=pin_memory,
+        collate_fn=collate_fn
     )
     
     return train_loader, val_loader
+
+def collate_fn(batch):
+    images, targets = zip(*batch)
+    
+    # Apila las imágenes
+    images = torch.stack(images, 0)
+    
+    # Encuentra el tamaño máximo entre todas las etiquetas
+    max_len = max(target.size(0) for target in targets)
+    
+    # Rellena cada etiqueta con ceros para que todas tengan el mismo tamaño
+    padded_targets = torch.zeros((len(targets), max_len), dtype=torch.float32)
+    for i, target in enumerate(targets):
+        padded_targets[i, :target.size(0)] = target
+    
+    return images, padded_targets
