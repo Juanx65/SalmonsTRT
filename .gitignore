@@ -6,6 +6,7 @@ datasets/**/*.jpg
 datasets/**/*.jpeg
 datasets/**/*.txt
 datasets/**/*.cache
+datasets/**/*.json
 *.engine
 *.onnx
 *.pt
