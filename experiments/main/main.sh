@@ -1,12 +1,10 @@
 # Remember to run chmod +x experiments/main.sh before executing ./experiments/main.sh
-
-BATCH_SIZE=$1  # Batch size to use in the experiment, from 1 to 128
-NETWORK=$2  # Neural network to use in the experiment
-BUILD_TYPE=$4 # "dynamic" or "static" Batch size to build your engines
-OP_LVL=$5 # Builder optimization level (int from 0 to 5, default = 3)
-DATASET_PATH=$6  # Validation dataset path, e.g., "datasets/dataset_val/val"; if none, the script will execute a test with random inputs
-POWER_MODE=$7 #if you profile on a specific power mode, specify it for the name of the logs
-PROFILE=$8 # write "pytorch" to profile with with pytorch profiler, "tegrastats" to profile with tegrastats or leave it blank.
+BATCH_SIZE=$1  # Batch size 1 to 32
+WEIGHTS=$2  # WEIGHTS to use in the experiment
+modelOP_LVL=$3 # Builder optimization level (int from 0 to 5, default = 3)
+POWER_MODE=$4 #if you profile on a specific power mode, specify it for the name of the logs
+PROFILE=$5 # write "pytorch" to profile with with pytorch profiler, "tegrastats" to profile with tegrastats or none.
+BUILD_TYPE=$6 # -trt or leave blank
 
 C=3  # Number of input channels
 W=640  # Input width
@@ -62,26 +60,10 @@ execute() {
     done
 }
 
-# EXECUTIONS
-# Vanilla (BASE MODEL) WE ADD --engine to indicate the ONNX of origin; with this ONNX, we calculate the network parameters
-# If you do not specify a dataset, this program will perform an evaluation with random inputs, providing only latency results.
-PROFILER=" "
-if [ "$PROFILE" = "pytorch" ]; then
-    PROFILER="--profile"
-fi
+MODEL="experiments/main/main.py --less --batch_size $BATCH_SIZE --weights $WEIGHTS $BUILD_TYPE"
 
-if [ -z "$DATASET_PATH" ] || [ "$DATASET_PATH" == "none" ]; then
-    MODEL="experiments/main/main.py --batch_size $BATCH_SIZE --trt --engine weights/${NETWORK}.engine --model_version FP16 --log_dir outputs/log/log_fp16_${NETWORK}_bs_${BATCH_SIZE}_${POWER_MODE} $PROFILER"
-else
-    MODEL="experiments/main/main.py -v --batch_size $BATCH_SIZE --dataset $DATASET_PATH --network $NETWORK --less --engine weights/best.engine --model_version Vanilla --log_dir outputs/log/log_vanilla_${NETWORK}_bs_${BATCH_SIZE}_${POWER_MODE} $PROFILER"
-fi
-
-#sudo rm -r outputs/log > /dev/null 2>&1
-#rm post_processing/*.txt > /dev/null 2>&1
-
-# Execute Python scripts sequentially
 if [ "$PROFILE" = "tegrastats" ]; then
-    execute "$MODEL" "jetson" "outputs/tegrastats_log/vanilla_${NETWORK}_bs_${BATCH_SIZE}_${POWER_MODE}_${BUILD_TYPE}_OPLVL${OP_LVL}.txt"
+    execute "$MODEL" "jetson" "outputs/tegrastats_log/${WEIGHTS}_bs_${BATCH_SIZE}_${POWER_MODE}_${BUILD_TYPE}_OPLVL${OP_LVL}.txt"
 else
     execute "$MODEL"
 fi

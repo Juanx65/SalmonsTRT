@@ -1,3 +1,5 @@
+#!/usr/bin/env -S bash -c '"`dirname $(dirname $(dirname $0))`/salmons/bin/python" "$0" "$@"'
+
 import argparse
 import os
 import time
@@ -368,7 +370,6 @@ def parse_opt():
     parser.add_argument('--print-freq', '-f', default=10, type=int, metavar='N',help='print frequency (default: 10)')
     parser.add_argument('-trt','--trt', action='store_true',help='evaluate model on validation set al optimizar con tensorrt')
     parser.add_argument('-n','--network', default='resnet18',help='name of the pretrained model to use')
-    parser.add_argument('-v','--validate', action='store_true',help='validate with validation data')
     parser.add_argument('-c','--compare', action='store_true',help='compare the results of the vanilla model with the trt model using random generated inputs')
     parser.add_argument('-rtol','--rtol', default=1e-3,type=float, help='relative tolerance for the numpy.isclose() function')
     parser.add_argument('-vd','--val_dataset', action='store_true',help='compare the results of the vanilla model with the trt model using the validation dataset as inputs')
