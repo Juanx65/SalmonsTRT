@@ -1,7 +1,7 @@
 # Remember to run chmod +x experiments/main.sh before executing ./experiments/main.sh
 BATCH_SIZE=$1  # Batch size 1 to 32
 WEIGHTS=$2  # WEIGHTS to use in the experiment
-modelOP_LVL=$3 # Builder optimization level (int from 0 to 5, default = 3)
+OP_LVL=$3 # Builder optimization level (int from 0 to 5, default = 3)
 POWER_MODE=$4 #if you profile on a specific power mode, specify it for the name of the logs
 PROFILE=$5 # write "pytorch" to profile with with pytorch profiler, "tegrastats" to profile with tegrastats or none.
 BUILD_TYPE=$6 # -trt or leave blank
@@ -63,7 +63,8 @@ execute() {
 MODEL="experiments/main/main.py --less --batch_size $BATCH_SIZE --weights $WEIGHTS $BUILD_TYPE"
 
 if [ "$PROFILE" = "tegrastats" ]; then
-    execute "$MODEL" "jetson" "outputs/tegrastats_log/${WEIGHTS}_bs_${BATCH_SIZE}_${POWER_MODE}_${BUILD_TYPE}_OPLVL${OP_LVL}.txt"
+    echo "start tegrastats"
+    execute "$MODEL" "jetson" "outputs/tegrastats_log/${BUILD_TYPE}_bs_${BATCH_SIZE}_${POWER_MODE}_OPLVL${OP_LVL}.txt"
 else
     execute "$MODEL"
 fi

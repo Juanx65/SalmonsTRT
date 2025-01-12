@@ -137,7 +137,12 @@ def evaluate(opt,val_loader, model):
     else:
         total_capas, total_parametros = get_parameters_vanilla(opt,model)
 
-    metrics = model.val(data='datasets/salmons/salmons.yaml', task='segment', batch=opt.batch_size, verbose=False)
+    map50 = 0
+    map5095 = 0
+    if opt.map:
+        metrics = model.val(data='datasets/salmons/salmons.yaml', task='segment', batch=opt.batch_size, verbose=False)
+        map50 = metrics.box.map50
+        map5095 = metrics.box.map
         
     if not opt.non_verbose:
         print("|  Model          | inf/s +-95% | Latency (ms) +-95%|size (MB)  | mAP50 |mAP50-95 | #layers | #parameters|")
@@ -147,7 +152,7 @@ def evaluate(opt,val_loader, model):
         number_formater(infxs) ,number_formater(infxs_me_up) ,number_formater(infxs_me_low),
         batch_time_all.avg, max_time_all, margin_error_upper,margin_error_lower,
         size_MB, 
-        metrics.box.map50, metrics.box.map,
+        map50, map5095,
         total_capas,total_parametros))
 
     if opt.histograma:
@@ -364,20 +369,17 @@ def parse_opt():
     parser.add_argument('--dataset', default='datasets/salmons', help='path to dataset')
     parser.add_argument('--batch_size', default = 1, type=int,help='batch size to train')
     parser.add_argument('--weights', default = 'weights/yolov8lsalmons.pt', type=str, help='directorio y nombre de archivo de donse se guardara el mejor peso entrenado')
-    parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',help='evaluate model on validation set')
     parser.add_argument('-m','--pin_memmory', action='store_true',help='use pin memmory')
     parser.add_argument('-j', '--workers', default=4, type=int, help='number of data loading workers (default: 4)')
     parser.add_argument('--print-freq', '-f', default=10, type=int, metavar='N',help='print frequency (default: 10)')
     parser.add_argument('-trt','--trt', action='store_true',help='evaluate model on validation set al optimizar con tensorrt')
-    parser.add_argument('-n','--network', default='resnet18',help='name of the pretrained model to use')
-    parser.add_argument('-c','--compare', action='store_true',help='compare the results of the vanilla model with the trt model using random generated inputs')
+    parser.add_argument('-map','--map', action='store_true',help='to evaluate mAP')
     parser.add_argument('-rtol','--rtol', default=1e-3,type=float, help='relative tolerance for the numpy.isclose() function')
     parser.add_argument('-vd','--val_dataset', action='store_true',help='compare the results of the vanilla model with the trt model using the validation dataset as inputs')
     parser.add_argument('--profile', action='store_true',help='profiles the validation run with torch profiler')
-    parser.add_argument('--compare_3', action='store_true',help='compare the results of the vanilla model with the trt model using random generated inputs')
     parser.add_argument('--less', action='store_true',help='print less information')
     parser.add_argument('--non_verbose', action='store_true',help='no table header and no gpu information')
-    parser.add_argument('--model_version', default='Vanilla',help='model name in the table output (validation): Vanilla, TRT fp32, TRT fp16 TRT int8')
+    parser.add_argument('--model_version', default='Base',help='model name in the table output (validation): Vanilla, TRT fp32, TRT fp16 TRT int8')
     parser.add_argument('--histograma', action='store_true',help='guarda una figura con el histograma de los tiempos x inferencia de cada batch')#'./log/log_vnll'}
     parser.add_argument('--log_dir', default='log/log_vnll', help='path to log dir for pytorch profiler')
    
