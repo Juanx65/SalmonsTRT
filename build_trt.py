@@ -16,11 +16,11 @@ def parse_args():
                         help='Model input shape, el primer valor es el batch_size, 128)]')
     parser.add_argument('--min_hw',
                         type= int,
-                        default=0,
+                        default=320,
                         help='Minimum height and width value, let on cero')
     parser.add_argument('--max_hw',
                         type= int,
-                        default=1280,
+                        default=960,
                         help='Max height and width value, let on the doble of the optimus value you wanna get')
     parser.add_argument('--max_batch_size',
                         type= int,
