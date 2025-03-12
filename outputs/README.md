@@ -1,1 +1,1 @@
-![Descripción del GIF](test.mp4)
+[![](test.gif)](test.mp4)
