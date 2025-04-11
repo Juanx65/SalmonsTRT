@@ -1,3 +1,28 @@
+# Build
+
+## Prerequisites
+
+* Linux ( based on Ubuntu 22.04 LTS )
+* python 3.10
+* virtualenv 
+* CUDA 12.4
+
+```
+$ git clone git@github.com:Juanx65/SalmonsTRT.git
+$ cd SalmonsTRT/
+$ virtualenv -p /usr/bin/python3.10 env
+$ source env/bin/activate
+$ pip install --no-cache-dir --use-pep517 -r requirements.txt
+```
+
+# Run Demo
+
+Refer to `workflow.ipynb`.
+
+# Wiki
+
+For more information, refer to the [Wiki](https://github.com/Juanx65/ArtTRT/wiki/)
+
 # RUN YOLO SEGMENT EVAL
 
 `yolo val segment data=datasets/salmons/salmons.yaml model=weights/best.pt`
